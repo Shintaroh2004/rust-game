@@ -155,16 +155,22 @@ fn main() {
         transform: glam::Mat4::IDENTITY,
     };
 
-    let path = Path::new("C:/Users/user/source/repos/rust-game/rust-game/assets/bird.glb");
+    let path = Path::new("assets/bird.glb");
     let gltf_data = std::fs::read(path).unwrap();
     let parent_directory = path.parent().unwrap();
-    let (_loaded_scene, _loaded_instance) = pollster::block_on(rend3_gltf::load_gltf(
+    let (_loaded_scene, mut loaded_instance) = pollster::block_on(rend3_gltf::load_gltf(
         &renderer,
         &gltf_data,
         &rend3_gltf::GltfLoadSettings::default(),
         |p| async move { rend3_gltf::filesystem_io_func(&parent_directory, &p).await },
     ))
     .expect("Loading gltf scene");
+
+    for node in loaded_instance.nodes.iter_mut(){
+        for prim in node.inner.object.as_mut().unwrap().inner.primitives.iter(){
+            renderer.set_object_transform(prim, glam::Mat4::from_translation(glam::vec3(0.0, 0.0, 2.0)));
+        }
+    }
 
     my_state.camera_init(&renderer);
 
@@ -173,7 +179,7 @@ fn main() {
     //
     // We need to keep the object handle alive.
 
-    //let _object_handle = renderer.add_object(object);
+    let _object_handle = renderer.add_object(object);
 
     // Create a single directional light
     //

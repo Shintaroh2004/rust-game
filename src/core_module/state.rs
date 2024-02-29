@@ -1,6 +1,6 @@
 #![cfg_attr(target_arch = "wasm32", allow(clippy::arc_with_non_send_sync))]
 
-use std::{f32::consts::PI, sync::Arc,path::Path};
+use std::{f32::consts::PI, sync::Arc};
 use winit::{dpi::PhysicalPosition, event::ElementState};
 use glam::Vec4Swizzles;
 use super::camera::Camera;
