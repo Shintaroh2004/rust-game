@@ -14,11 +14,18 @@ glam = "0.24"
 rend3 = { version = "^0.3.0", path = "../rend3/rend3" }
 # Programmable render list that dictates how the scene renders
 rend3-routine = { version = "^0.3.0", path = "../rend3/rend3-routine" }
+rend3-gltf={ version = "^0.3.0", path = "../rend3/rend3-gltf" }
 # Provides `block_on` to wait for futures from sync code
 pollster = "0.3"
 # windowing
 winit = "0.29.4"
 wgpu="0.19.0"
+# Importing images and Loading glb/gltf texture
+image = { version = "0.24", default-features = false, features = [
+    "png",
+    "jpeg",
+    "tiff",
+] }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 console_log = "1"

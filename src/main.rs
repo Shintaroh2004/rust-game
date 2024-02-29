@@ -2,6 +2,7 @@
 
 mod core_module;
 use std::sync::Arc;
+use std::path::Path;
 use core_module::state::State;
 
 fn vertex(pos: [f32; 3]) -> glam::Vec3 {
@@ -153,6 +154,18 @@ fn main() {
         material: material_handle,
         transform: glam::Mat4::IDENTITY,
     };
+
+    let path = Path::new("C:/Users/user/source/repos/rust-game/rust-game/assets/bird.glb");
+    let gltf_data = std::fs::read(path).unwrap();
+    let parent_directory = path.parent().unwrap();
+    let (_loaded_scene, _loaded_instance) = pollster::block_on(rend3_gltf::load_gltf(
+        &renderer,
+        &gltf_data,
+        &rend3_gltf::GltfLoadSettings::default(),
+        |p| async move { rend3_gltf::filesystem_io_func(&parent_directory, &p).await },
+    ))
+    .expect("Loading gltf scene");
+
     my_state.camera_init(&renderer);
 
     // Creating an object will hold onto both the mesh and the material
@@ -160,7 +173,7 @@ fn main() {
     //
     // We need to keep the object handle alive.
 
-    let _object_handle = renderer.add_object(object);
+    //let _object_handle = renderer.add_object(object);
 
     // Create a single directional light
     //

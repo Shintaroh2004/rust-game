@@ -1,6 +1,6 @@
 #![cfg_attr(target_arch = "wasm32", allow(clippy::arc_with_non_send_sync))]
 
-use std::{f32::consts::PI, sync::Arc};
+use std::{f32::consts::PI, sync::Arc,path::Path};
 use winit::{dpi::PhysicalPosition, event::ElementState};
 use glam::Vec4Swizzles;
 use super::camera::Camera;
@@ -40,8 +40,8 @@ impl State{
 
     pub fn camera_euler_update(&mut self,position:&PhysicalPosition<f64>){
         let deff_euler_deg=glam::Vec2{
-            y:((position.x as f32)-self.pre_cursor_pos.x)/300.0,
-            x:((position.y as f32)-self.pre_cursor_pos.y)/300.0
+            y:((position.x as f32)-self.pre_cursor_pos.x)/400.0,
+            x:((position.y as f32)-self.pre_cursor_pos.y)/400.0
         };
         let euler_x=self.camera.euler_x-deff_euler_deg.x;
         if (euler_x<=(PI/2.5)) && (euler_x>=(-PI/2.5)){
