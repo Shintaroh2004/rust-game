@@ -73,6 +73,7 @@ fn main() {
         builder.build(&event_loop).expect("Could not build window")
     };
     let window=Arc::new(window);
+    window.set_cursor_visible(false);
 
     let window_size = window.inner_size();
 
@@ -271,8 +272,6 @@ fn main() {
                 ..
             }=>{
                 my_state.camera_euler_update(&position);
-
-                window.set_cursor_visible(false);
                 if let Ok(_)=window.set_cursor_position(my_state.pre_cursor_pos){}
             }
             // Other events we don't care about

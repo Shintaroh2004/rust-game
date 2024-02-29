@@ -52,10 +52,10 @@ impl State{
             self.camera.euler_x=-(PI/2.5);
         }
         self.camera.euler_y-=deff_euler_deg.y;
-        self.camera.euler=glam::Mat4::from_euler(glam::EulerRot::XYZ, self.camera.euler_x, self.camera.euler_y, 0.0);
     }
 
     pub fn camera_update(&mut self,renderer:&Arc<rend3::Renderer>){
+        self.camera.euler=glam::Mat4::from_euler(glam::EulerRot::XYZ, self.camera.euler_x, self.camera.euler_y, 0.0);
         if self.forward{
             let vel_mat=self.camera.euler*glam::Mat4::from_translation(glam::vec3(0.0,0.0,1.0));
             let vel=vel_mat.w_axis.xyz();
