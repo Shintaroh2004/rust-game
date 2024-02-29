@@ -69,7 +69,7 @@ fn main() {
     let event_loop = winit::event_loop::EventLoop::new().unwrap();
     let window = {
         let mut builder = winit::window::WindowBuilder::new();
-        builder = builder.with_title("rend3 cube");
+        builder = builder.with_title("渡辺慎太郎のサンプル");
         builder.build(&event_loop).expect("Could not build window")
     };
     let window=Arc::new(window);
