@@ -19,7 +19,6 @@ pollster = "0.3"
 # windowing
 winit = "0.29.4"
 wgpu="0.19.0"
-cgmath = "0.18.0"
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 console_log = "1"
