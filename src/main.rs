@@ -1,7 +1,6 @@
 #![cfg_attr(target_arch = "wasm32", allow(clippy::arc_with_non_send_sync))]
 
 mod core_module;
-
 use std::sync::Arc;
 use core_module::state::State;
 
@@ -154,7 +153,6 @@ fn main() {
         material: material_handle,
         transform: glam::Mat4::IDENTITY,
     };
-
     my_state.camera_init(&renderer);
 
     // Creating an object will hold onto both the mesh and the material
