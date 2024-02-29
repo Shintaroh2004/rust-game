@@ -4,13 +4,14 @@ use std::{f32::consts::PI, sync::Arc};
 use winit::{dpi::PhysicalPosition, event::ElementState};
 use glam::Vec4Swizzles;
 
+const PRE_CURSOR_POS:PhysicalPosition<f32>=PhysicalPosition{x:955.0,y:515.0};
+
 struct State {
     forward:bool,
     back:bool,
     left:bool,
     right:bool,
     camera:Camera,
-    pre_cursor_pos:PhysicalPosition<f32>,
 }
 
 impl State{
@@ -21,14 +22,13 @@ impl State{
             left:false,
             right:false,
             camera:Camera::new(),
-            pre_cursor_pos:PhysicalPosition{x:955.0,y:515.0},
         }
     }
 
     fn camera_euler_update(&mut self,position:&PhysicalPosition<f64>){
         let deff_euler_deg=glam::Vec2{
-            y:((position.x as f32)-self.pre_cursor_pos.x)/300.0,
-            x:((position.y as f32)-self.pre_cursor_pos.y)/300.0
+            y:((position.x as f32)-PRE_CURSOR_POS.x)/300.0,
+            x:((position.y as f32)-PRE_CURSOR_POS.y)/300.0
         };
         let euler_x=self.camera.euler_x-deff_euler_deg.x;
         if (euler_x<=(PI/2.5)) && (euler_x>=(-PI/2.5)){
@@ -82,6 +82,50 @@ impl State{
         });
     }
 
+    fn key_event_handler(
+        &mut self,
+        event:winit::event::KeyEvent
+    ){
+        match event.state {
+            ElementState::Pressed=>{
+                if !event.repeat {
+                    match event.physical_key {
+                        winit::keyboard::PhysicalKey::Code(winit::keyboard::KeyCode::KeyW)=>{
+                            self.forward=true;
+                        },
+                        winit::keyboard::PhysicalKey::Code(winit::keyboard::KeyCode::KeyA)=>{
+                            self.left=true;
+                        },
+                        winit::keyboard::PhysicalKey::Code(winit::keyboard::KeyCode::KeyS)=>{
+                            self.back=true;
+                        },
+                        winit::keyboard::PhysicalKey::Code(winit::keyboard::KeyCode::KeyD)=>{
+                            self.right=true;
+                        },
+                        _=>{}
+                    }
+                }    
+            },
+            ElementState::Released=>{
+                match event.physical_key {
+                    winit::keyboard::PhysicalKey::Code(winit::keyboard::KeyCode::KeyW)=>{
+                        self.forward=false;
+                    },
+                    winit::keyboard::PhysicalKey::Code(winit::keyboard::KeyCode::KeyA)=>{
+                        self.left=false;
+                    },
+                    winit::keyboard::PhysicalKey::Code(winit::keyboard::KeyCode::KeyS)=>{
+                        self.back=false;
+                    },
+                    winit::keyboard::PhysicalKey::Code(winit::keyboard::KeyCode::KeyD)=>{
+                        self.right=false;
+                    },
+                    _=>{}
+                }
+            },
+        }
+    }
+
 }
 
 struct Camera{
@@ -94,7 +138,7 @@ struct Camera{
 impl Camera{
     fn new()->Self{
         Self{
-            position:glam::Vec3::new(0.0,0.0,0.0),
+            position:glam::Vec3::new(0.0,0.0,-5.0),
             euler:glam::Mat4::from_euler(glam::EulerRot::XYZ, 0.0, 0.0, 0.0),
             euler_x:0.0,
             euler_y:0.0,
@@ -360,54 +404,12 @@ fn main() {
             //KeyBordEvents
             winit::event::Event::WindowEvent {
                 event:winit::event::WindowEvent::KeyboardInput{
-                    event:winit::event::KeyEvent{
-                        physical_key,
-                        state,
-                        repeat,
-                        ..
-                    },
+                    event,
                     ..
                 },
                 ..
             }=>{
-                match state {
-                    ElementState::Pressed=>{
-                        if !repeat {
-                            match physical_key {
-                                winit::keyboard::PhysicalKey::Code(winit::keyboard::KeyCode::KeyW)=>{
-                                    my_state.forward=true;
-                                },
-                                winit::keyboard::PhysicalKey::Code(winit::keyboard::KeyCode::KeyA)=>{
-                                    my_state.left=true;
-                                },
-                                winit::keyboard::PhysicalKey::Code(winit::keyboard::KeyCode::KeyS)=>{
-                                    my_state.back=true;
-                                },
-                                winit::keyboard::PhysicalKey::Code(winit::keyboard::KeyCode::KeyD)=>{
-                                    my_state.right=true;
-                                },
-                                _=>{}
-                            }
-                        }    
-                    },
-                    ElementState::Released=>{
-                        match physical_key {
-                            winit::keyboard::PhysicalKey::Code(winit::keyboard::KeyCode::KeyW)=>{
-                                my_state.forward=false;
-                            },
-                            winit::keyboard::PhysicalKey::Code(winit::keyboard::KeyCode::KeyA)=>{
-                                my_state.left=false;
-                            },
-                            winit::keyboard::PhysicalKey::Code(winit::keyboard::KeyCode::KeyS)=>{
-                                my_state.back=false;
-                            },
-                            winit::keyboard::PhysicalKey::Code(winit::keyboard::KeyCode::KeyD)=>{
-                                my_state.right=false;
-                            },
-                            _=>{}
-                        }
-                    },
-                }
+                my_state.key_event_handler(event);
             }
             //MouseCursor
             winit::event::Event::WindowEvent { 
@@ -420,7 +422,7 @@ fn main() {
                 my_state.camera_euler_update(&position);
 
                 window.set_cursor_visible(false);
-                if let Ok(_)=window.set_cursor_position(my_state.pre_cursor_pos){}
+                if let Ok(_)=window.set_cursor_position(PRE_CURSOR_POS){}
             }
             // Other events we don't care about
             _ => {}
