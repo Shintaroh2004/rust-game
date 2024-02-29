@@ -26,6 +26,18 @@ impl State{
         }
     }
 
+    pub fn camera_init(&self,renderer:&Arc<rend3::Renderer>){
+        let view_location = glam::Vec3::new(0.0, 0.0, -5.0);
+        let view = glam::Mat4::from_euler(glam::EulerRot::XYZ, 0.0, 0.0, 0.0);
+        let view = view * glam::Mat4::from_translation(-view_location);
+    
+        // Set camera's location
+        renderer.set_camera_data(rend3::types::Camera {
+            projection: rend3::types::CameraProjection::Perspective { vfov: 60.0, near: 0.1 },
+            view,
+        });
+    }
+
     pub fn camera_euler_update(&mut self,position:&PhysicalPosition<f64>){
         let deff_euler_deg=glam::Vec2{
             y:((position.x as f32)-self.pre_cursor_pos.x)/300.0,

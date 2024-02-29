@@ -154,22 +154,14 @@ fn main() {
         transform: glam::Mat4::IDENTITY,
     };
 
+    my_state.camera_init(&renderer);
+
     // Creating an object will hold onto both the mesh and the material
     // even if they are deleted.
     //
     // We need to keep the object handle alive.
 
     let _object_handle = renderer.add_object(object);
-
-    let view_location = glam::Vec3::new(0.0, 0.0, -5.0);
-    let view = glam::Mat4::from_euler(glam::EulerRot::XYZ, 0.0, 0.0, 0.0);
-    let view = view * glam::Mat4::from_translation(-view_location);
-
-    // Set camera's location
-    renderer.set_camera_data(rend3::types::Camera {
-        projection: rend3::types::CameraProjection::Perspective { vfov: 60.0, near: 0.1 },
-        view,
-    });
 
     // Create a single directional light
     //
