@@ -9,10 +9,8 @@ struct State {
     back:bool,
     left:bool,
     right:bool,
+    camera:Camera,
     pre_cursor_pos:PhysicalPosition<f32>,
-    euler:glam::Mat4,
-    euler_x:f32,
-    euler_y:f32,
 }
 
 impl State{
@@ -22,28 +20,85 @@ impl State{
             back:false,
             left:false,
             right:false,
+            camera:Camera::new(),
             pre_cursor_pos:PhysicalPosition{x:955.0,y:515.0},
-            euler:glam::Mat4::from_euler(glam::EulerRot::XYZ, 0.0, 0.0, 0.0),
-            euler_x:0.0,
-            euler_y:0.0,
         }
     }
 
-    fn euler_deg_update(&mut self,position:&PhysicalPosition<f64>){
+    fn camera_euler_update(&mut self,position:&PhysicalPosition<f64>){
         let deff_euler_deg=glam::Vec2{
             y:((position.x as f32)-self.pre_cursor_pos.x)/300.0,
             x:((position.y as f32)-self.pre_cursor_pos.y)/300.0
         };
-        let euler_x=self.euler_x-deff_euler_deg.x;
+        let euler_x=self.camera.euler_x-deff_euler_deg.x;
         if (euler_x<=(PI/2.5)) && (euler_x>=(-PI/2.5)){
-            self.euler_x-=deff_euler_deg.x;
+            self.camera.euler_x-=deff_euler_deg.x;
         }else if euler_x > (PI/2.5){
-            self.euler_x=PI/2.5;
+            self.camera.euler_x=PI/2.5;
         }else if euler_x < -(PI/2.5){
-            self.euler_x=-(PI/2.5);
+            self.camera.euler_x=-(PI/2.5);
         }
-        self.euler_y-=deff_euler_deg.y;
-        self.euler=glam::Mat4::from_euler(glam::EulerRot::XYZ, self.euler_x, self.euler_y, 0.0);
+        self.camera.euler_y-=deff_euler_deg.y;
+        self.camera.euler=glam::Mat4::from_euler(glam::EulerRot::XYZ, self.camera.euler_x, self.camera.euler_y, 0.0);
+    }
+
+    fn camera_update(&mut self,renderer:&Arc<rend3::Renderer>){
+        if self.forward{
+            let vel_mat=self.camera.euler*glam::Mat4::from_translation(glam::vec3(0.0,0.0,1.0));
+            let vel=vel_mat.w_axis.xyz();
+            let vel=vel.normalize()*0.2;
+            self.camera.position.x-=vel.x;
+            self.camera.position.z+=vel.z;
+        }
+        if  self.back{
+            let vel_mat=self.camera.euler*glam::Mat4::from_translation(glam::vec3(0.0,0.0,1.0));
+            let vel=vel_mat.w_axis.xyz();
+            let vel=vel.normalize()*0.2;
+            self.camera.position.x+=vel.x;
+            self.camera.position.z-=vel.z;
+        }
+        if self.left{
+            let vel_mat=glam::Mat4::from_rotation_y(PI/2.0)*self.camera.euler*glam::Mat4::from_translation(glam::vec3(0.0,0.0,1.0));
+            let vel=vel_mat.w_axis.xyz();
+            let vel=vel.normalize()*0.2;
+            self.camera.position.x-=vel.x;
+            self.camera.position.z+=vel.z;
+        }
+        if self.right{
+            let vel_mat=glam::Mat4::from_rotation_y(-PI/2.0)*self.camera.euler*glam::Mat4::from_translation(glam::vec3(0.0,0.0,1.0));
+            let vel=vel_mat.w_axis.xyz();
+            let vel=vel.normalize()*0.2;
+            self.camera.position.x-=vel.x;
+            self.camera.position.z+=vel.z;
+        }
+
+        let view_location = self.camera.position;
+        let view = self.camera.euler;
+        let view = view * glam::Mat4::from_translation(-view_location);
+
+        renderer.set_camera_data(rend3::types::Camera {
+            projection: rend3::types::CameraProjection::Perspective { vfov: 60.0, near: 0.1 },
+            view,
+        });
+    }
+
+}
+
+struct Camera{
+    position:glam::Vec3,
+    euler:glam::Mat4,
+    euler_x:f32,
+    euler_y:f32,
+}
+
+impl Camera{
+    fn new()->Self{
+        Self{
+            position:glam::Vec3::new(0.0,0.0,0.0),
+            euler:glam::Mat4::from_euler(glam::EulerRot::XYZ, 0.0, 0.0, 0.0),
+            euler_x:0.0,
+            euler_y:0.0,
+        }
     }
 }
 
@@ -227,8 +282,6 @@ fn main() {
 
     let mut resolution = glam::UVec2::new(window_size.width, window_size.height);
 
-    let mut transration=glam::vec3(0.0, 0.5, -5.0);
-
     event_loop
         .run(move |event, _event_loop_window_target| match event {
             // Window was resized, need to resize renderer.
@@ -294,49 +347,13 @@ fn main() {
                     },
                 );
 
+                my_state.camera_update(&renderer);
+
                 // Dispatch a render using the built up rendergraph!
                 graph.execute(&renderer, &mut eval_output);
 
                 // Present the frame
                 frame.present();
-
-                if my_state.forward{
-                    let vel_mat=my_state.euler*glam::Mat4::from_translation(glam::vec3(0.0,0.0,1.0));
-                    let vel=vel_mat.w_axis.xyz();
-                    let vel=vel.normalize()*0.2;
-                    transration.x-=vel.x;
-                    transration.z+=vel.z;
-                }
-                if my_state.back{
-                    let vel_mat=my_state.euler*glam::Mat4::from_translation(glam::vec3(0.0,0.0,1.0));
-                    let vel=vel_mat.w_axis.xyz();
-                    let vel=vel.normalize()*0.2;
-                    transration.x+=vel.x;
-                    transration.z-=vel.z;
-                }
-                if my_state.left{
-                    let vel_mat=glam::Mat4::from_rotation_y(PI/2.0)*my_state.euler*glam::Mat4::from_translation(glam::vec3(0.0,0.0,1.0));
-                    let vel=vel_mat.w_axis.xyz();
-                    let vel=vel.normalize()*0.2;
-                    transration.x-=vel.x;
-                    transration.z+=vel.z;
-                }
-                if my_state.right{
-                    let vel_mat=glam::Mat4::from_rotation_y(-PI/2.0)*my_state.euler*glam::Mat4::from_translation(glam::vec3(0.0,0.0,1.0));
-                    let vel=vel_mat.w_axis.xyz();
-                    let vel=vel.normalize()*0.2;
-                    transration.x-=vel.x;
-                    transration.z+=vel.z;
-                }
-
-                let view_location = transration;
-                let view = my_state.euler;
-                let view = view * glam::Mat4::from_translation(-view_location);
-
-                renderer.set_camera_data(rend3::types::Camera {
-                    projection: rend3::types::CameraProjection::Perspective { vfov: 60.0, near: 0.1 },
-                    view,
-                });
 
                 window.request_redraw();
             }
@@ -400,7 +417,7 @@ fn main() {
                 },
                 ..
             }=>{
-                my_state.euler_deg_update(&position);
+                my_state.camera_euler_update(&position);
 
                 window.set_cursor_visible(false);
                 if let Ok(_)=window.set_cursor_position(my_state.pre_cursor_pos){}
