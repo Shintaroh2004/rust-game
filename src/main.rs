@@ -1,150 +1,9 @@
 #![cfg_attr(target_arch = "wasm32", allow(clippy::arc_with_non_send_sync))]
 
-use std::{f32::consts::PI, sync::Arc};
-use winit::{dpi::PhysicalPosition, event::ElementState};
-use glam::Vec4Swizzles;
+mod core_module;
 
-const PRE_CURSOR_POS:PhysicalPosition<f32>=PhysicalPosition{x:955.0,y:515.0};
-
-struct State {
-    forward:bool,
-    back:bool,
-    left:bool,
-    right:bool,
-    camera:Camera,
-}
-
-impl State{
-    fn new()->Self{
-        Self{
-            forward:false,
-            back:false,
-            left:false,
-            right:false,
-            camera:Camera::new(),
-        }
-    }
-
-    fn camera_euler_update(&mut self,position:&PhysicalPosition<f64>){
-        let deff_euler_deg=glam::Vec2{
-            y:((position.x as f32)-PRE_CURSOR_POS.x)/300.0,
-            x:((position.y as f32)-PRE_CURSOR_POS.y)/300.0
-        };
-        let euler_x=self.camera.euler_x-deff_euler_deg.x;
-        if (euler_x<=(PI/2.5)) && (euler_x>=(-PI/2.5)){
-            self.camera.euler_x-=deff_euler_deg.x;
-        }else if euler_x > (PI/2.5){
-            self.camera.euler_x=PI/2.5;
-        }else if euler_x < -(PI/2.5){
-            self.camera.euler_x=-(PI/2.5);
-        }
-        self.camera.euler_y-=deff_euler_deg.y;
-        self.camera.euler=glam::Mat4::from_euler(glam::EulerRot::XYZ, self.camera.euler_x, self.camera.euler_y, 0.0);
-    }
-
-    fn camera_update(&mut self,renderer:&Arc<rend3::Renderer>){
-        if self.forward{
-            let vel_mat=self.camera.euler*glam::Mat4::from_translation(glam::vec3(0.0,0.0,1.0));
-            let vel=vel_mat.w_axis.xyz();
-            let vel=vel.normalize()*0.2;
-            self.camera.position.x-=vel.x;
-            self.camera.position.z+=vel.z;
-        }
-        if  self.back{
-            let vel_mat=self.camera.euler*glam::Mat4::from_translation(glam::vec3(0.0,0.0,1.0));
-            let vel=vel_mat.w_axis.xyz();
-            let vel=vel.normalize()*0.2;
-            self.camera.position.x+=vel.x;
-            self.camera.position.z-=vel.z;
-        }
-        if self.left{
-            let vel_mat=glam::Mat4::from_rotation_y(PI/2.0)*self.camera.euler*glam::Mat4::from_translation(glam::vec3(0.0,0.0,1.0));
-            let vel=vel_mat.w_axis.xyz();
-            let vel=vel.normalize()*0.2;
-            self.camera.position.x-=vel.x;
-            self.camera.position.z+=vel.z;
-        }
-        if self.right{
-            let vel_mat=glam::Mat4::from_rotation_y(-PI/2.0)*self.camera.euler*glam::Mat4::from_translation(glam::vec3(0.0,0.0,1.0));
-            let vel=vel_mat.w_axis.xyz();
-            let vel=vel.normalize()*0.2;
-            self.camera.position.x-=vel.x;
-            self.camera.position.z+=vel.z;
-        }
-
-        let view_location = self.camera.position;
-        let view = self.camera.euler;
-        let view = view * glam::Mat4::from_translation(-view_location);
-
-        renderer.set_camera_data(rend3::types::Camera {
-            projection: rend3::types::CameraProjection::Perspective { vfov: 60.0, near: 0.1 },
-            view,
-        });
-    }
-
-    fn key_event_handler(
-        &mut self,
-        event:winit::event::KeyEvent
-    ){
-        match event.state {
-            ElementState::Pressed=>{
-                if !event.repeat {
-                    match event.physical_key {
-                        winit::keyboard::PhysicalKey::Code(winit::keyboard::KeyCode::KeyW)=>{
-                            self.forward=true;
-                        },
-                        winit::keyboard::PhysicalKey::Code(winit::keyboard::KeyCode::KeyA)=>{
-                            self.left=true;
-                        },
-                        winit::keyboard::PhysicalKey::Code(winit::keyboard::KeyCode::KeyS)=>{
-                            self.back=true;
-                        },
-                        winit::keyboard::PhysicalKey::Code(winit::keyboard::KeyCode::KeyD)=>{
-                            self.right=true;
-                        },
-                        _=>{}
-                    }
-                }    
-            },
-            ElementState::Released=>{
-                match event.physical_key {
-                    winit::keyboard::PhysicalKey::Code(winit::keyboard::KeyCode::KeyW)=>{
-                        self.forward=false;
-                    },
-                    winit::keyboard::PhysicalKey::Code(winit::keyboard::KeyCode::KeyA)=>{
-                        self.left=false;
-                    },
-                    winit::keyboard::PhysicalKey::Code(winit::keyboard::KeyCode::KeyS)=>{
-                        self.back=false;
-                    },
-                    winit::keyboard::PhysicalKey::Code(winit::keyboard::KeyCode::KeyD)=>{
-                        self.right=false;
-                    },
-                    _=>{}
-                }
-            },
-        }
-    }
-
-}
-
-struct Camera{
-    position:glam::Vec3,
-    euler:glam::Mat4,
-    euler_x:f32,
-    euler_y:f32,
-}
-
-impl Camera{
-    fn new()->Self{
-        Self{
-            position:glam::Vec3::new(0.0,0.0,-5.0),
-            euler:glam::Mat4::from_euler(glam::EulerRot::XYZ, 0.0, 0.0, 0.0),
-            euler_x:0.0,
-            euler_y:0.0,
-        }
-    }
-}
+use std::sync::Arc;
+use core_module::state::State;
 
 fn vertex(pos: [f32; 3]) -> glam::Vec3 {
     glam::Vec3::from(pos)
@@ -422,7 +281,7 @@ fn main() {
                 my_state.camera_euler_update(&position);
 
                 window.set_cursor_visible(false);
-                if let Ok(_)=window.set_cursor_position(PRE_CURSOR_POS){}
+                if let Ok(_)=window.set_cursor_position(my_state.pre_cursor_pos){}
             }
             // Other events we don't care about
             _ => {}
