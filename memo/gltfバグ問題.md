@@ -42,7 +42,7 @@ for node in loaded_instance.nodes.iter_mut(){
 
 モデル自体は回転させず，モデルの周りをWASDとマウス操作で移動するのでこうなるはず．
 
-### 現実（gif添付）
+### 現実
 
 ![現実.gif](gif/gltfバグ問題/現実.gif)
 
