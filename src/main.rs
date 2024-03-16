@@ -149,7 +149,7 @@ fn main() {
     let material_handle = renderer.add_material(material);
 
     // Combine the mesh and the material with a location to give an object.
-    let object = rend3::types::Object {
+    let _object = rend3::types::Object {
         mesh_kind: rend3::types::ObjectMeshKind::Static(mesh_handle),
         material: material_handle,
         transform: glam::Mat4::IDENTITY,
@@ -166,9 +166,12 @@ fn main() {
     ))
     .expect("Loading gltf scene");
 
+
     for node in loaded_instance.nodes.iter_mut(){
-        for prim in node.inner.object.as_mut().unwrap().inner.primitives.iter(){
-            renderer.set_object_transform(prim, glam::Mat4::from_translation(glam::vec3(0.0, 0.0, 2.0)));
+        if let Some(labeled_objects) = node.inner.object.as_mut() {
+            for prim in labeled_objects.inner.primitives.iter(){
+                renderer.set_object_transform(prim, glam::Mat4::from_translation(glam::vec3(2.0,2.0,0.0)));
+            }
         }
     }
 
@@ -179,7 +182,7 @@ fn main() {
     //
     // We need to keep the object handle alive.
 
-    let _object_handle = renderer.add_object(object);
+    // let _object_handle = renderer.add_object(object);
 
     // Create a single directional light
     //
@@ -188,7 +191,7 @@ fn main() {
         color: glam::Vec3::ONE,
         intensity: 10.0,
         // Direction will be normalized
-        direction: glam::Vec3::new(-1.0, -4.0, 2.0),
+        direction: glam::Vec3::new(1.0, 4.0, 2.0),
         distance: 400.0,
         resolution: 2048,
     });
