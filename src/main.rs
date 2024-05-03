@@ -170,7 +170,7 @@ fn main() {
     for node in loaded_instance.nodes.iter_mut(){
         if let Some(labeled_objects) = node.inner.object.as_mut() {
             for prim in labeled_objects.inner.primitives.iter(){
-                renderer.set_object_transform(prim, glam::Mat4::from_translation(glam::vec3(2.0,2.0,0.0)));
+                renderer.set_object_transform(prim, glam::Mat4::from_translation(glam::vec3(0.0,0.0,0.0)));
             }
         }
     }
